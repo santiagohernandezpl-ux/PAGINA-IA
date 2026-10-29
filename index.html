@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="cafeYA: descubre, conoce la historia y pide cafés 100% campesinos directamente de productores locales de Colombia.">
+  <title>cafeYA | Cafés 100% campesinos de Colombia</title>
+
+  <!-- ============================================================
+       SCRIPT ANTI-PARPADEO: aplica el modo oscuro antes de pintar
+       ============================================================ -->
+  <script>
+    (function () {
+      var tema = null;
+      try { tema = localStorage.getItem('cafeya-tema'); } catch (e) { /* almacenamiento no disponible */ }
+      var prefiereOscuro = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (tema === 'oscuro' || (tema === null && prefiereOscuro)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+
+  <!-- ============================================================
+       FUENTES DE GOOGLE: Playfair Display (títulos) e Inter (texto)
+       ============================================================ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- ============================================================
+       TAILWIND CSS 4 (Play CDN oficial)
+       ============================================================ -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+  <!-- ============================================================
+       TEMA PERSONALIZADO: paleta 60-30-10, colores semánticos y fuentes
+       ============================================================ -->
+  <style type="text/tailwindcss">
+    /* Variante dark: controlada por la clase .dark en <html> */
+    @custom-variant dark (&:where(.dark, .dark *));
+
+    @theme {
+      /* Fuentes */
+      --font-display: "Playfair Display", Georgia, serif;
+      --font-sans: "Inter", system-ui, sans-serif;
+
+      /* 60% - Dominante: crema claro */
+      --color-crema: #FAF8F5;
+      --color-crema-200: #F1EBE3;
+
+      /* 30% - Secundario: café tierra profundo */
+      --color-tierra: #2C1810;
+      --color-tierra-700: #4A2C1F;
+      --color-tierra-900: #1A0E09;
+
+      /* 10% - Acento: ocre / naranja tostado */
+      --color-ocre: #D97706;
+      --color-ocre-oscuro: #B45309;   /* versión para TEXTO sobre fondo claro (contraste ≥ 4.5:1) */
+      --color-ocre-claro: #F59E0B;    /* versión para texto sobre fondo oscuro */
+
+      /* Semánticos */
+      --color-exito: #16A34A;
+      --color-exito-oscuro: #15803D;  /* fondo del toast con texto blanco (contraste ≥ 4.5:1) */
+      --color-error: #DC2626;
+      --color-error-texto: #B91C1C;   /* texto de error sobre blanco (contraste ≥ 4.5:1) */
+    }
+
+    @layer base {
+      html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+      body { @apply font-sans bg-crema text-tierra antialiased dark:bg-tierra-900 dark:text-crema; }
+      h1, h2, h3 { @apply font-display; }
+
+      /* Enfoque visible y consistente en todos los elementos interactivos */
+      :focus-visible { @apply outline-3 outline-offset-2 outline-ocre; }
+
+      /* Respeta la preferencia de movimiento reducido */
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+      }
+    }
+  </style>
+</head>
+
+<body class="min-h-screen transition-colors duration-300">
+
+  <!-- Enlace para saltar al contenido (accesibilidad con teclado) -->
+  <a href="#contenido"
+     class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-md focus:bg-ocre focus:px-4 focus:py-2 focus:font-semibold focus:text-tierra">
+    Saltar al contenido principal
+  </a>
+
+  <!-- ============================================================
+       1. NAVBAR FIJA
+       ============================================================ -->
+  <header class="fixed inset-x-0 top-0 z-50 border-b border-tierra/10 bg-crema/95 backdrop-blur dark:border-crema/10 dark:bg-tierra-900/95">
+    <nav class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8" aria-label="Navegación principal">
+
+      <!-- Logo en texto -->
+      <a href="#inicio" class="font-display text-2xl font-extrabold tracking-tight">
+        cafe<span class="text-ocre-oscuro dark:text-ocre-claro">YA</span>
+      </a>
+
+      <!-- Enlaces de escritorio -->
+      <ul class="hidden items-center gap-8 text-sm font-medium lg:flex">
+        <li><a href="#inicio" class="rounded hover:text-ocre-oscuro dark:hover:text-ocre-claro">Inicio</a></li>
+        <li><a href="#cafes" class="rounded hover:text-ocre-oscuro dark:hover:text-ocre-claro">Nuestros Cafés</a></li>
+        <li><a href="#historia" class="rounded hover:text-ocre-oscuro dark:hover:text-ocre-claro">Historia</a></li>
+        <li><a href="#faq" class="rounded hover:text-ocre-oscuro dark:hover:text-ocre-claro">Preguntas</a></li>
+        <li><a href="#pedido" class="rounded hover:text-ocre-oscuro dark:hover:text-ocre-claro">Contacto</a></li>
+      </ul>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Contador del carrito -->
+        <span class="hidden items-center gap-1 rounded-full bg-crema-200 px-3 py-1 text-sm font-semibold sm:inline-flex dark:bg-tierra-700">
+          <svg aria-hidden="true" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13 5.4 5M7 13l-2.3 2.3c-.6.6-.2 1.7.7 1.7H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z"/></svg>
+          <span class="sr-only">Productos en el carrito:</span>
+          <span id="contador-carrito">0</span>
+        </span>
+
+        <!-- Botón modo claro / oscuro -->
+        <button id="btn-tema" type="button"
+                class="rounded-full p-2 hover:bg-crema-200 dark:hover:bg-tierra-700"
+                aria-label="Activar modo oscuro" aria-pressed="false">
+          <!-- Icono luna (se muestra en modo claro) -->
+          <svg aria-hidden="true" class="h-5 w-5 dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+          <!-- Icono sol (se muestra en modo oscuro) -->
+          <svg aria-hidden="true" class="hidden h-5 w-5 dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path stroke-linecap="round" d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+
+        <!-- Botón Pedir Café (escritorio) -->
+        <a href="#pedido"
+           class="hidden rounded-full bg-ocre px-5 py-2 text-sm font-semibold text-tierra shadow-sm transition hover:bg-ocre-claro sm:inline-block">
+          Pedir Café
+        </a>
+
+        <!-- Botón hamburguesa (móvil) -->
+        <button id="btn-menu" type="button"
+                class="rounded-md p-2 hover:bg-crema-200 lg:hidden dark:hover:bg-tierra-700"
+                aria-controls="menu-movil" aria-expanded="false" aria-label="Abrir menú">
+          <svg id="icono-abrir" aria-hidden="true" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <svg id="icono-cerrar" aria-hidden="true" class="hidden h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Menú desplegable móvil -->
+    <div id="menu-movil" class="hidden border-t border-tierra/10 bg-crema lg:hidden dark:border-crema/10 dark:bg-tierra-900">
+      <ul class="space-y-1 px-4 py-4 text-base font-medium">
+        <li><a href="#inicio" class="enlace-movil block rounded-md px-3 py-2 hover:bg-crema-200 dark:hover:bg-tierra-700">Inicio</a></li>
+        <li><a href="#cafes" class="enlace-movil block rounded-md px-3 py-2 hover:bg-crema-200 dark:hover:bg-tierra-700">Nuestros Cafés</a></li>
+        <li><a href="#historia" class="enlace-movil block rounded-md px-3 py-2 hover:bg-crema-200 dark:hover:bg-tierra-700">Historia</a></li>
+        <li><a href="#faq" class="enlace-movil block rounded-md px-3 py-2 hover:bg-crema-200 dark:hover:bg-tierra-700">Preguntas</a></li>
+        <li><a href="#pedido" class="enlace-movil block rounded-md px-3 py-2 hover:bg-crema-200 dark:hover:bg-tierra-700">Contacto</a></li>
+        <li class="pt-2">
+          <a href="#pedido" class="enlace-movil block rounded-full bg-ocre px-5 py-3 text-center font-semibold text-tierra hover:bg-ocre-claro">Pedir Café</a>
+        </li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="contenido">
+
+    <!-- ============================================================
+         2. HERO PRINCIPAL
+         ============================================================ -->
+    <section id="inicio"
+             class="relative flex min-h-[100svh] items-center bg-tierra bg-cover bg-center pt-16"
+             style="background-image: url('https://images.unsplash.com/photo-1524350876685-274059332603?auto=format&fit=crop&w=1920&q=80');">
+      <!-- Descripción de la imagen de fondo para lectores de pantalla -->
+      <span class="sr-only">Imagen de fondo: cafetal colombiano en las montañas.</span>
+      <!-- Capa oscura translúcida para garantizar contraste -->
+      <div class="absolute inset-0 bg-tierra-900/70" aria-hidden="true"></div>
+
+      <div class="relative mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+        <div class="max-w-2xl text-crema">
+          <p class="mb-4 inline-block rounded-full bg-ocre/20 px-4 py-1 text-sm font-semibold text-ocre-claro ring-1 ring-ocre/40">
+            100% campesino · Comercio justo
+          </p>
+          <h1 class="text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
+            Del cafetal a tu taza, <span class="text-ocre-claro">sin intermediarios</span>
+          </h1>
+          <p class="mt-6 text-lg leading-relaxed text-crema/90 sm:text-xl">
+            Descubre cafés de origen cultivados por familias campesinas de Colombia, conoce la historia detrás de cada grano y pídelo directo a quien lo produce.
+          </p>
+          <div class="mt-10 flex flex-col gap-4 sm:flex-row">
+            <a href="#cafes"
+               class="rounded-full bg-ocre px-8 py-3 text-center font-semibold text-tierra shadow-lg transition hover:-translate-y-0.5 hover:bg-ocre-claro">
+              Ver Catálogo
+            </a>
+            <a href="#historia"
+               class="rounded-full border-2 border-crema px-8 py-3 text-center font-semibold text-crema transition hover:bg-crema hover:text-tierra">
+              Conocer la Historia
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         3. NUESTROS CAFÉS CAMPESINOS (PRODUCTOS)
+         ============================================================ -->
+    <section id="cafes" class="py-20 sm:py-24" aria-labelledby="titulo-cafes">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto mb-14 max-w-2xl text-center">
+          <p class="font-semibold uppercase tracking-widest text-ocre-oscuro dark:text-ocre-claro">Catálogo</p>
+          <h2 id="titulo-cafes" class="mt-2 text-3xl font-bold sm:text-4xl">Nuestros Cafés Campesinos</h2>
+          <p class="mt-4 text-tierra-700 dark:text-crema/80">
+            Cada bolsa de 500 g viene de una finca o vereda específica. Sabes quién lo cultivó, dónde y cómo.
+          </p>
+        </div>
+
+        <!-- Rejilla: 1 columna (móvil), 2 (tablet), 3 (escritorio) -->
+        <ul class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3" role="list">
+
+          <!-- Tarjeta 1 -->
+          <li class="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-tierra/5 transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:bg-tierra dark:ring-crema/10">
+            <div class="overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1447933601403-0c6688de566e?auto=format&fit=crop&w=800&q=75"
+                   alt="Granos de café tostado de la Finca El Mirador" loading="lazy"
+                   class="h-56 w-full object-cover transition duration-500 group-hover:scale-110">
+            </div>
+            <div class="flex flex-1 flex-col p-6">
+              <p class="text-sm font-medium text-ocre-oscuro dark:text-ocre-claro">Pitalito, Huila</p>
+              <h3 class="mt-1 text-xl font-bold">Finca El Mirador</h3>
+              <p class="mt-3 text-sm text-tierra-700 dark:text-crema/80"><strong class="font-semibold">Notas de cata:</strong> panela, chocolate amargo y mandarina.</p>
+              <div class="mt-auto flex items-center justify-between pt-6">
+                <p class="text-lg font-bold">$42.000 <span class="text-xs font-medium">COP</span></p>
+                <button type="button" data-cafe="Finca El Mirador"
+                        class="btn-carrito rounded-full bg-tierra px-4 py-2 text-sm font-semibold text-crema transition hover:bg-ocre hover:text-tierra dark:bg-ocre dark:text-tierra dark:hover:bg-ocre-claro">
+                  Añadir al carrito
+                </button>
+              </div>
+            </div>
+          </li>
+
+          <!-- Tarjeta 2 -->
+          <li class="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-tierra/5 transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:bg-tierra dark:ring-crema/10">
+            <div class="overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=800&q=75"
+                   alt="Café de la Vereda La Esperanza servido en taza" loading="lazy"
+                   class="h-56 w-full object-cover transition duration-500 group-hover:scale-110">
+            </div>
+            <div class="flex flex-1 flex-col p-6">
+              <p class="text-sm font-medium text-ocre-oscuro dark:text-ocre-claro">Acevedo, Huila</p>
+              <h3 class="mt-1 text-xl font-bold">Vereda La Esperanza</h3>
+              <p class="mt-3 text-sm text-tierra-700 dark:text-crema/80"><strong class="font-semibold">Notas de cata:</strong> frutos rojos, caramelo y acidez brillante.</p>
+              <div class="mt-auto flex items-center justify-between pt-6">
+                <p class="text-lg font-bold">$45.000 <span class="text-xs font-medium">COP</span></p>
+                <button type="button" data-cafe="Vereda La Esperanza"
+                        class="btn-carrito rounded-full bg-tierra px-4 py-2 text-sm font-semibold text-crema transition hover:bg-ocre hover:text-tierra dark:bg-ocre dark:text-tierra dark:hover:bg-ocre-claro">
+                  Añadir al carrito
+                </button>
+              </div>
+            </div>
+          </li>
+
+          <!-- Tarjeta 3 -->
+          <li class="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-tierra/5 transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:bg-tierra dark:ring-crema/10">
+            <div class="overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=75"
+                   alt="Taza de café recién preparado de la Finca Los Naranjos" loading="lazy"
+                   class="h-56 w-full object-cover transition duration-500 group-hover:scale-110">
+            </div>
+            <div class="flex flex-1 flex-col p-6">
+              <p class="text-sm font-medium text-ocre-oscuro dark:text-ocre-claro">Planadas, Tolima</p>
+              <h3 class="mt-1 text-xl font-bold">Finca Los Naranjos</h3>
+              <p class="mt-3 text-sm text-tierra-700 dark:text-crema/80"><strong class="font-semibold">Notas de cata:</strong> cítricos, flor de café y miel.</p>
+              <div class="mt-auto flex items-center justify-between pt-6">
+                <p class="text-lg font-bold">$39.000 <span class="text-xs font-medium">COP</span></p>
+                <button type="button" data-cafe="Finca Los Naranjos"
+                        class="btn-carrito rounded-full bg-tierra px-4 py-2 text-sm font-semibold text-crema transition hover:bg-ocre hover:text-tierra dark:bg-ocre dark:text-tierra dark:hover:bg-ocre-claro">
+                  Añadir al carrito
+                </button>
+              </div>
+            </div>
+          </li>
+
+          <!-- Tarjeta 4 -->
+          <li class="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-tierra/5 transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:bg-tierra dark:ring-crema/10">
+            <div class="overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=75"
+                   alt="Café espresso de la Vereda El Diviso" loading="lazy"
+                   class="h-56 w-full object-cover transition duration-500 group-hover:scale-110">
+            </div>
+            <div class="flex flex-1 flex-col p-6">
+              <p class="text-sm font-medium text-ocre-oscuro dark:text-ocre-claro">Buesaco, Nariño</p>
+              <h3 class="mt-1 text-xl font-bold">Vereda El Diviso</h3>
+              <p class="mt-3 text-sm text-tierra-700 dark:text-crema/80"><strong class="font-semibold">Notas de cata:</strong> durazno, jazmín y cuerpo sedoso.</p>
+              <div class="mt-auto flex items-center justify-between pt-6">
+                <p class="text-lg font-bold">$48.000 <span class="text-xs font-medium">COP</span></p>
+                <button type="button" data-cafe="Vereda El Diviso"
+                        class="btn-carrito rounded-full bg-tierra px-4 py-2 text-sm font-semibold text-crema transition hover:bg-ocre hover:text-tierra dark:bg-ocre dark:text-tierra dark:hover:bg-ocre-claro">
+                  Añadir al carrito
+                </button>
+              </div>
+            </div>
+          </li>
+
+          <!-- Tarjeta 5 -->
+          <li class="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-tierra/5 transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:bg-tierra dark:ring-crema/10">
+            <div class="overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=75"
+                   alt="Café con leche preparado con grano de la Finca La Cumbre" loading="lazy"
+                   class="h-56 w-full object-cover transition duration-500 group-hover:scale-110">
+            </div>
+            <div class="flex flex-1 flex-col p-6">
+              <p class="text-sm font-medium text-ocre-oscuro dark:text-ocre-claro">Salento, Quindío</p>
+              <h3 class="mt-1 text-xl font-bold">Finca La Cumbre</h3>
+              <p class="mt-3 text-sm text-tierra-700 dark:text-crema/80"><strong class="font-semibold">Notas de cata:</strong> nuez, cacao y final dulce.</p>
+              <div class="mt-auto flex items-center justify-between pt-6">
+                <p class="text-lg font-bold">$36.000 <span class="text-xs font-medium">COP</span></p>
+                <button type="button" data-cafe="Finca La Cumbre"
+                        class="btn-carrito rounded-full bg-tierra px-4 py-2 text-sm font-semibold text-crema transition hover:bg-ocre hover:text-tierra dark:bg-ocre dark:text-tierra dark:hover:bg-ocre-claro">
+                  Añadir al carrito
+                </button>
+              </div>
+            </div>
+          </li>
+
+          <!-- Tarjeta 6 -->
+          <li class="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-tierra/5 transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:bg-tierra dark:ring-crema/10">
+            <div class="overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=800&q=75"
+                   alt="Café filtrado de la Finca Santa Rita" loading="lazy"
+                   class="h-56 w-full object-cover transition duration-500 group-hover:scale-110">
+            </div>
+            <div class="flex flex-1 flex-col p-6">
+              <p class="text-sm font-medium text-ocre-oscuro dark:text-ocre-claro">La Plata, Huila</p>
+              <h3 class="mt-1 text-xl font-bold">Finca Santa Rita</h3>
+              <p class="mt-3 text-sm text-tierra-700 dark:text-crema/80"><strong class="font-semibold">Notas de cata:</strong> manzana verde, vainilla y acidez media.</p>
+              <div class="mt-auto flex items-center justify-between pt-6">
+                <p class="text-lg font-bold">$44.000 <span class="text-xs font-medium">COP</span></p>
+                <button type="button" data-cafe="Finca Santa Rita"
+                        class="btn-carrito rounded-full bg-tierra px-4 py-2 text-sm font-semibold text-crema transition hover:bg-ocre hover:text-tierra dark:bg-ocre dark:text-tierra dark:hover:bg-ocre-claro">
+                  Añadir al carrito
+                </button>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         4. NUESTRA HISTORIA / MANIFIESTO
+         ============================================================ -->
+    <section id="historia" class="bg-tierra py-20 text-crema sm:py-24" aria-labelledby="titulo-historia">
+      <div class="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
+        <!-- Columna de texto -->
+        <div>
+          <p class="font-semibold uppercase tracking-widest text-ocre-claro">Manifiesto</p>
+          <h2 id="titulo-historia" class="mt-2 text-3xl font-bold sm:text-4xl">Nuestra Historia</h2>
+          <p class="mt-6 leading-relaxed text-crema/90">
+            cafeYA nació en las montañas del sur de Colombia, donde las familias campesinas cultivan algunos de los mejores cafés del mundo, pero reciben solo una pequeña parte de lo que paga quien lo bebe.
+          </p>
+          <p class="mt-4 leading-relaxed text-crema/90">
+            Creemos en el <strong class="text-ocre-claro">comercio directo</strong>: conectamos a quien toma el café con quien lo siembra. Sin intermediarios, el productor fija un precio justo y recibe la mayor parte del valor de cada bolsa.
+          </p>
+          <ul class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3" role="list">
+            <li class="rounded-xl bg-tierra-700 p-5">
+              <p class="font-display text-3xl font-bold text-ocre-claro">70%</p>
+              <p class="mt-1 text-sm text-crema/90">del precio llega al productor</p>
+            </li>
+            <li class="rounded-xl bg-tierra-700 p-5">
+              <p class="font-display text-3xl font-bold text-ocre-claro">120+</p>
+              <p class="mt-1 text-sm text-crema/90">familias campesinas aliadas</p>
+            </li>
+            <li class="rounded-xl bg-tierra-700 p-5">
+              <p class="font-display text-3xl font-bold text-ocre-claro">8</p>
+              <p class="mt-1 text-sm text-crema/90">departamentos cafeteros</p>
+            </li>
+          </ul>
+        </div>
+        <!-- Columna de imagen -->
+        <div class="relative">
+          <div class="absolute -inset-3 -rotate-2 rounded-3xl bg-ocre/30" aria-hidden="true"></div>
+          <img src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1000&q=75"
+               alt="Espacio cálido donde se comparte café de origen campesino" loading="lazy"
+               class="relative h-80 w-full rounded-3xl object-cover shadow-2xl sm:h-[28rem]">
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         5. PREGUNTAS FRECUENTES (ACORDEÓN)
+         ============================================================ -->
+    <section id="faq" class="py-20 sm:py-24" aria-labelledby="titulo-faq">
+      <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+        <div class="mb-12 text-center">
+          <p class="font-semibold uppercase tracking-widest text-ocre-oscuro dark:text-ocre-claro">Resolvemos tus dudas</p>
+          <h2 id="titulo-faq" class="mt-2 text-3xl font-bold sm:text-4xl">Preguntas Frecuentes</h2>
+        </div>
+
+        <div class="space-y-4" id="acordeon">
+          <!-- Pregunta 1 -->
+          <div class="rounded-xl bg-white shadow-sm ring-1 ring-tierra/10 dark:bg-tierra dark:ring-crema/10">
+            <h3>
+              <button type="button" class="faq-boton flex w-full items-center justify-between gap-4 rounded-xl px-6 py-5 text-left font-sans text-base font-semibold"
+                      aria-expanded="false" aria-controls="faq-panel-1" id="faq-boton-1">
+                ¿Cómo sé que el café es realmente campesino?
+                <svg aria-hidden="true" class="faq-icono h-5 w-5 shrink-0 text-ocre-oscuro transition-transform duration-300 dark:text-ocre-claro" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+              </button>
+            </h3>
+            <div id="faq-panel-1" role="region" aria-labelledby="faq-boton-1" class="faq-panel hidden px-6 pb-5 text-tierra-700 dark:text-crema/80">
+              Cada bolsa incluye el nombre de la familia productora, la finca o vereda, la altura y la fecha de cosecha. Visitamos personalmente a cada productor aliado.
+            </div>
+          </div>
+
+          <!-- Pregunta 2 -->
+          <div class="rounded-xl bg-white shadow-sm ring-1 ring-tierra/10 dark:bg-tierra dark:ring-crema/10">
+            <h3>
+              <button type="button" class="faq-boton flex w-full items-center justify-between gap-4 rounded-xl px-6 py-5 text-left font-sans text-base font-semibold"
+                      aria-expanded="false" aria-controls="faq-panel-2" id="faq-boton-2">
+                ¿Cuánto tarda en llegar mi pedido?
+                <svg aria-hidden="true" class="faq-icono h-5 w-5 shrink-0 text-ocre-oscuro transition-transform duration-300 dark:text-ocre-claro" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+              </button>
+            </h3>
+            <div id="faq-panel-2" role="region" aria-labelledby="faq-boton-2" class="faq-panel hidden px-6 pb-5 text-tierra-700 dark:text-crema/80">
+              En ciudades principales entre 2 y 4 días hábiles; en municipios y zonas rurales entre 4 y 7 días hábiles. Tostamos bajo pedido para que llegue fresco.
+            </div>
+          </div>
+
+          <!-- Pregunta 3 -->
+          <div class="rounded-xl bg-white shadow-sm ring-1 ring-tierra/10 dark:bg-tierra dark:ring-crema/10">
+            <h3>
+              <button type="button" class="faq-boton flex w-full items-center justify-between gap-4 rounded-xl px-6 py-5 text-left font-sans text-base font-semibold"
+                      aria-expanded="false" aria-controls="faq-panel-3" id="faq-boton-3">
+                ¿Puedo elegir café en grano o molido?
+                <svg aria-hidden="true" class="faq-icono h-5 w-5 shrink-0 text-ocre-oscuro transition-transform duration-300 dark:text-ocre-claro" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+              </button>
+            </h3>
+            <div id="faq-panel-3" role="region" aria-labelledby="faq-boton-3" class="faq-panel hidden px-6 pb-5 text-tierra-700 dark:text-crema/80">
+              Sí. Puedes pedirlo en grano o molido para prensa francesa, filtro, moka o espresso. Indícalo en el mensaje de tu pedido.
+            </div>
+          </div>
+
+          <!-- Pregunta 4 -->
+          <div class="rounded-xl bg-white shadow-sm ring-1 ring-tierra/10 dark:bg-tierra dark:ring-crema/10">
+            <h3>
+              <button type="button" class="faq-boton flex w-full items-center justify-between gap-4 rounded-xl px-6 py-5 text-left font-sans text-base font-semibold"
+                      aria-expanded="false" aria-controls="faq-panel-4" id="faq-boton-4">
+                ¿Puedo visitar las fincas como turista?
+                <svg aria-hidden="true" class="faq-icono h-5 w-5 shrink-0 text-ocre-oscuro transition-transform duration-300 dark:text-ocre-claro" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+              </button>
+            </h3>
+            <div id="faq-panel-4" role="region" aria-labelledby="faq-boton-4" class="faq-panel hidden px-6 pb-5 text-tierra-700 dark:text-crema/80">
+              ¡Claro! Varias familias ofrecen recorridos por el cafetal y catas en finca. Escríbenos por el formulario y te conectamos con el productor.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         6. FORMULARIO DE PEDIDOS / CONTACTO
+         ============================================================ -->
+    <section id="pedido" class="bg-crema-200 py-20 sm:py-24 dark:bg-tierra" aria-labelledby="titulo-pedido">
+      <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+        <div class="mb-10 text-center">
+          <p class="font-semibold uppercase tracking-widest text-ocre-oscuro dark:text-ocre-claro">Haz tu pedido</p>
+          <h2 id="titulo-pedido" class="mt-2 text-3xl font-bold sm:text-4xl">Pide tu café campesino</h2>
+          <p class="mt-4 text-tierra-700 dark:text-crema/80">Los campos marcados con <span aria-hidden="true" class="font-bold text-error-texto dark:text-red-400">*</span><span class="sr-only">asterisco</span> son obligatorios.</p>
+        </div>
+
+        <form id="form-pedido" novalidate
+              class="space-y-6 rounded-2xl bg-white p-6 shadow-lg ring-1 ring-tierra/10 sm:p-10 dark:bg-tierra-900 dark:ring-crema/10">
+
+          <!-- Nombre completo -->
+          <div>
+            <label for="nombre" class="mb-2 block text-sm font-semibold">
+              Nombre completo <span aria-hidden="true" class="text-error-texto dark:text-red-400">*</span>
+            </label>
+            <input type="text" id="nombre" name="nombre" autocomplete="name" required aria-describedby="error-nombre"
+                   class="campo w-full rounded-lg border border-tierra/30 bg-white px-4 py-3 text-tierra placeholder:text-tierra/60 dark:border-crema/30 dark:bg-tierra dark:text-crema dark:placeholder:text-crema/60"
+                   placeholder="Ej: María Fernanda Ruiz">
+            <p id="error-nombre" class="mensaje-error mt-2 hidden text-sm font-medium text-error-texto dark:text-red-400"></p>
+          </div>
+
+          <!-- Correo electrónico -->
+          <div>
+            <label for="correo" class="mb-2 block text-sm font-semibold">
+              Correo electrónico <span aria-hidden="true" class="text-error-texto dark:text-red-400">*</span>
+            </label>
+            <input type="email" id="correo" name="correo" autocomplete="email" required aria-describedby="error-correo"
+                   class="campo w-full rounded-lg border border-tierra/30 bg-white px-4 py-3 text-tierra placeholder:text-tierra/60 dark:border-crema/30 dark:bg-tierra dark:text-crema dark:placeholder:text-crema/60"
+                   placeholder="tucorreo@ejemplo.com">
+            <p id="error-correo" class="mensaje-error mt-2 hidden text-sm font-medium text-error-texto dark:text-red-400"></p>
+          </div>
+
+          <!-- Dirección de envío -->
+          <div>
+            <label for="direccion" class="mb-2 block text-sm font-semibold">
+              Dirección de envío <span aria-hidden="true" class="text-error-texto dark:text-red-400">*</span>
+            </label>
+            <input type="text" id="direccion" name="direccion" autocomplete="street-address" required aria-describedby="error-direccion"
+                   class="campo w-full rounded-lg border border-tierra/30 bg-white px-4 py-3 text-tierra placeholder:text-tierra/60 dark:border-crema/30 dark:bg-tierra dark:text-crema dark:placeholder:text-crema/60"
+                   placeholder="Calle 10 # 5-20, Neiva, Huila">
+            <p id="error-direccion" class="mensaje-error mt-2 hidden text-sm font-medium text-error-texto dark:text-red-400"></p>
+          </div>
+
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <!-- Variedad de café -->
+            <div>
+              <label for="variedad" class="mb-2 block text-sm font-semibold">
+                Variedad de café <span aria-hidden="true" class="text-error-texto dark:text-red-400">*</span>
+              </label>
+              <select id="variedad" name="variedad" required aria-describedby="error-variedad"
+                      class="campo w-full rounded-lg border border-tierra/30 bg-white px-4 py-3 text-tierra dark:border-crema/30 dark:bg-tierra dark:text-crema">
+                <option value="">Selecciona una variedad</option>
+                <option>Finca El Mirador</option>
+                <option>Vereda La Esperanza</option>
+                <option>Finca Los Naranjos</option>
+                <option>Vereda El Diviso</option>
+                <option>Finca La Cumbre</option>
+                <option>Finca Santa Rita</option>
+              </select>
+              <p id="error-variedad" class="mensaje-error mt-2 hidden text-sm font-medium text-error-texto dark:text-red-400"></p>
+            </div>
+
+            <!-- Cantidad -->
+            <div>
+              <label for="cantidad" class="mb-2 block text-sm font-semibold">
+                Cantidad (1 a 10 unidades) <span aria-hidden="true" class="text-error-texto dark:text-red-400">*</span>
+              </label>
+              <input type="number" id="cantidad" name="cantidad" min="1" max="10" step="1" value="1" required inputmode="numeric" aria-describedby="error-cantidad"
+                     class="campo w-full rounded-lg border border-tierra/30 bg-white px-4 py-3 text-tierra dark:border-crema/30 dark:bg-tierra dark:text-crema">
+              <p id="error-cantidad" class="mensaje-error mt-2 hidden text-sm font-medium text-error-texto dark:text-red-400"></p>
+            </div>
+          </div>
+
+          <button type="submit"
+                  class="w-full rounded-full bg-ocre px-8 py-4 font-semibold text-tierra shadow-md transition hover:bg-ocre-claro">
+            Enviar pedido
+          </button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================================================
+       7. PIE DE PÁGINA (FOOTER)
+       ============================================================ -->
+  <footer class="bg-tierra-900 text-crema dark:border-t dark:border-crema/10">
+    <div class="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
+      <!-- Marca -->
+      <div>
+        <p class="font-display text-2xl font-extrabold">cafe<span class="text-ocre-claro">YA</span></p>
+        <p class="mt-3 text-sm leading-relaxed text-crema/80">Cafés 100% campesinos, del productor a tu taza con comercio justo.</p>
+      </div>
+
+      <!-- Enlaces rápidos -->
+      <nav aria-label="Enlaces rápidos">
+        <h2 class="font-sans text-sm font-semibold uppercase tracking-wider text-ocre-claro">Enlaces rápidos</h2>
+        <ul class="mt-4 space-y-2 text-sm">
+          <li><a href="#cafes" class="rounded text-crema/85 hover:text-ocre-claro">Nuestros Cafés</a></li>
+          <li><a href="#historia" class="rounded text-crema/85 hover:text-ocre-claro">Nuestra Historia</a></li>
+          <li><a href="#faq" class="rounded text-crema/85 hover:text-ocre-claro">Preguntas Frecuentes</a></li>
+          <li><a href="#pedido" class="rounded text-crema/85 hover:text-ocre-claro">Hacer un pedido</a></li>
+        </ul>
+      </nav>
+
+      <!-- Contacto -->
+      <div>
+        <h2 class="font-sans text-sm font-semibold uppercase tracking-wider text-ocre-claro">Contacto</h2>
+        <address class="mt-4 space-y-2 text-sm not-italic text-crema/85">
+          <p>Neiva, Huila, Colombia</p>
+          <p><a href="tel:+576080000000" class="rounded hover:text-ocre-claro">+57 608 000 0000</a></p>
+          <p><a href="mailto:hola@cafeya.co" class="rounded hover:text-ocre-claro">hola@cafeya.co</a></p>
+        </address>
+      </div>
+
+      <!-- Redes sociales -->
+      <div>
+        <h2 class="font-sans text-sm font-semibold uppercase tracking-wider text-ocre-claro">Síguenos</h2>
+        <ul class="mt-4 flex gap-3" role="list">
+          <li>
+            <a href="#" aria-label="cafeYA en Instagram" class="flex h-10 w-10 items-center justify-center rounded-full bg-tierra-700 transition hover:bg-ocre hover:text-tierra">
+              <svg aria-hidden="true" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+            </a>
+          </li>
+          <li>
+            <a href="#" aria-label="cafeYA en Facebook" class="flex h-10 w-10 items-center justify-center rounded-full bg-tierra-700 transition hover:bg-ocre hover:text-tierra">
+              <svg aria-hidden="true" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M14 8h3V4h-3a4 4 0 0 0-4 4v2H8v4h2v8h4v-8h3l1-4h-4V8z"/></svg>
+            </a>
+          </li>
+          <li>
+            <a href="#" aria-label="cafeYA en WhatsApp" class="flex h-10 w-10 items-center justify-center rounded-full bg-tierra-700 transition hover:bg-ocre hover:text-tierra">
+              <svg aria-hidden="true" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21l1.7-5A8.5 8.5 0 1 1 8 19.3L3 21z"/></svg>
+            </a>
+          </li>
+          <li>
+            <a href="#" aria-label="cafeYA en TikTok" class="flex h-10 w-10 items-center justify-center rounded-full bg-tierra-700 transition hover:bg-ocre hover:text-tierra">
+              <svg aria-hidden="true" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5M14 3c.5 2.5 2.5 4.5 5 5"/></svg>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Derechos reservados -->
+    <div class="border-t border-crema/10">
+      <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-center text-sm text-crema/75 sm:flex-row sm:justify-between sm:px-6 lg:px-8">
+        <p>&copy; <span id="anio">2026</span> cafeYA. Todos los derechos reservados.</p>
+        <p>Hecho con orgullo campesino en Colombia.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       TOAST DE CONFIRMACIÓN (verde) y región de anuncios accesibles
+       ============================================================ -->
+  <div id="toast" role="status" aria-live="polite"
+       class="pointer-events-none fixed bottom-6 left-1/2 z-[70] flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 translate-y-8 items-center gap-3 rounded-xl bg-exito-oscuro px-5 py-4 font-medium text-white opacity-0 shadow-2xl ring-2 ring-exito transition-all duration-300">
+    <svg aria-hidden="true" class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m5 13 4 4L19 7"/></svg>
+    <span id="toast-texto">¡Pedido enviado con éxito!</span>
+  </div>
+
+  <!-- Anuncios para lectores de pantalla (carrito) -->
+  <div id="anuncio" class="sr-only" aria-live="polite"></div>
+
+  <!-- ============================================================
+       JAVASCRIPT
+       ============================================================ -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+      /* ---------- Año actual en el footer ---------- */
+      document.getElementById('anio').textContent = new Date().getFullYear();
+
+      /* ---------- 1. Menú hamburguesa (móvil) ---------- */
+      var btnMenu = document.getElementById('btn-menu');
+      var menuMovil = document.getElementById('menu-movil');
+      var iconoAbrir = document.getElementById('icono-abrir');
+      var iconoCerrar = document.getElementById('icono-cerrar');
+
+      function alternarMenu(abrir) {
+        menuMovil.classList.toggle('hidden', !abrir);
+        iconoAbrir.classList.toggle('hidden', abrir);
+        iconoCerrar.classList.toggle('hidden', !abrir);
+        btnMenu.setAttribute('aria-expanded', String(abrir));
+        btnMenu.setAttribute('aria-label', abrir ? 'Cerrar menú' : 'Abrir menú');
+      }
+
+      btnMenu.addEventListener('click', function () {
+        alternarMenu(btnMenu.getAttribute('aria-expanded') !== 'true');
+      });
+
+      // Cerrar al elegir un enlace
+      document.querySelectorAll('.enlace-movil').forEach(function (enlace) {
+        enlace.addEventListener('click', function () { alternarMenu(false); });
+      });
+
+      // Cerrar con la tecla Escape y devolver el foco al botón
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && btnMenu.getAttribute('aria-expanded') === 'true') {
+          alternarMenu(false);
+          btnMenu.focus();
+        }
+      });
+
+      // Cerrar si la pantalla pasa a tamaño escritorio
+      window.matchMedia('(min-width: 1024px)').addEventListener('change', function (e) {
+        if (e.matches) alternarMenu(false);
+      });
+
+      /* ---------- 8. Modo claro / oscuro ---------- */
+      var btnTema = document.getElementById('btn-tema');
+      var raiz = document.documentElement;
+
+      function actualizarBotonTema() {
+        var oscuro = raiz.classList.contains('dark');
+        btnTema.setAttribute('aria-pressed', String(oscuro));
+        btnTema.setAttribute('aria-label', oscuro ? 'Activar modo claro' : 'Activar modo oscuro');
+      }
+
+      btnTema.addEventListener('click', function () {
+        var oscuro = raiz.classList.toggle('dark');
+        try { localStorage.setItem('cafeya-tema', oscuro ? 'oscuro' : 'claro'); } catch (e) { /* sin almacenamiento */ }
+        actualizarBotonTema();
+      });
+      actualizarBotonTema();
+
+      /* ---------- Carrito (contador simple) ---------- */
+      var contador = document.getElementById('contador-carrito');
+      var anuncio = document.getElementById('anuncio');
+      var totalCarrito = 0;
+
+      document.querySelectorAll('.btn-carrito').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+          totalCarrito++;
+          contador.textContent = totalCarrito;
+          anuncio.textContent = boton.dataset.cafe + ' añadido al carrito. Total: ' + totalCarrito + ' productos.';
+
+          // Retroalimentación visual temporal
+          var textoOriginal = boton.textContent;
+          boton.textContent = '¡Añadido! ✓';
+          boton.disabled = true;
+          setTimeout(function () {
+            boton.textContent = textoOriginal;
+            boton.disabled = false;
+          }, 1200);
+        });
+      });
+
+      /* ---------- 5. Acordeón de Preguntas Frecuentes ---------- */
+      var botonesFaq = document.querySelectorAll('.faq-boton');
+
+      botonesFaq.forEach(function (boton) {
+        boton.addEventListener('click', function () {
+          var abierto = boton.getAttribute('aria-expanded') === 'true';
+
+          // Cierra todos los paneles (solo uno abierto a la vez)
+          botonesFaq.forEach(function (otro) {
+            otro.setAttribute('aria-expanded', 'false');
+            document.getElementById(otro.getAttribute('aria-controls')).classList.add('hidden');
+            otro.querySelector('.faq-icono').classList.remove('rotate-180');
+          });
+
+          // Abre el seleccionado si estaba cerrado
+          if (!abierto) {
+            boton.setAttribute('aria-expanded', 'true');
+            document.getElementById(boton.getAttribute('aria-controls')).classList.remove('hidden');
+            boton.querySelector('.faq-icono').classList.add('rotate-180');
+          }
+        });
+      });
+
+      /* ---------- 6. Validación del formulario ---------- */
+      var formulario = document.getElementById('form-pedido');
+      var regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+      // Reglas de validación por campo: devuelven un mensaje de error o cadena vacía
+      var reglas = {
+        nombre: function (v) {
+          if (!v) return 'Por favor escribe tu nombre completo.';
+          if (v.length < 3) return 'El nombre debe tener al menos 3 caracteres.';
+          return '';
+        },
+        correo: function (v) {
+          if (!v) return 'El correo electrónico es obligatorio.';
+          if (!regexCorreo.test(v)) return 'Ingresa un correo válido, por ejemplo: nombre@dominio.com';
+          return '';
+        },
+        direccion: function (v) {
+          if (!v) return 'La dirección de envío es obligatoria.';
+          return '';
+        },
+        variedad: function (v) {
+          if (!v) return 'Selecciona una variedad de café.';
+          return '';
+        },
+        cantidad: function (v) {
+          if (!v) return 'Indica la cantidad.';
+          var n = Number(v);
+          if (!Number.isInteger(n) || n < 1 || n > 10) return 'La cantidad debe ser un número entero entre 1 y 10.';
+          return '';
+        }
+      };
+
+      function mostrarError(campo, mensaje) {
+        var error = document.getElementById('error-' + campo.id);
+        if (mensaje) {
+          error.textContent = mensaje;
+          error.classList.remove('hidden');
+          campo.setAttribute('aria-invalid', 'true');
+          campo.classList.add('border-error', 'ring-1', 'ring-error');
+        } else {
+          error.textContent = '';
+          error.classList.add('hidden');
+          campo.removeAttribute('aria-invalid');
+          campo.classList.remove('border-error', 'ring-1', 'ring-error');
+        }
+      }
+
+      function validarCampo(campo) {
+        var mensaje = reglas[campo.id](campo.value.trim());
+        mostrarError(campo, mensaje);
+        return mensaje === '';
+      }
+
+      // Revalida en vivo cuando el usuario corrige un campo con error
+      Object.keys(reglas).forEach(function (id) {
+        var campo = document.getElementById(id);
+        var evento = campo.tagName === 'SELECT' ? 'change' : 'input';
+        campo.addEventListener(evento, function () {
+          if (campo.getAttribute('aria-invalid') === 'true') validarCampo(campo);
+        });
+        campo.addEventListener('blur', function () {
+          if (campo.value.trim() !== '' || campo.getAttribute('aria-invalid') === 'true') validarCampo(campo);
+        });
+      });
+
+      formulario.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var primerInvalido = null;
+
+        Object.keys(reglas).forEach(function (id) {
+          var campo = document.getElementById(id);
+          if (!validarCampo(campo) && !primerInvalido) primerInvalido = campo;
+        });
+
+        if (primerInvalido) {
+          primerInvalido.focus(); // Lleva el foco al primer error
+          return;
+        }
+
+        // Envío exitoso (simulado)
+        var nombre = document.getElementById('nombre').value.trim().split(' ')[0];
+        mostrarToast('¡Gracias, ' + nombre + '! Tu pedido fue enviado con éxito.');
+        formulario.reset();
+      });
+
+      /* ---------- Toast verde de confirmación (4 segundos) ---------- */
+      var toast = document.getElementById('toast');
+      var toastTexto = document.getElementById('toast-texto');
+      var temporizadorToast = null;
+
+      function mostrarToast(mensaje) {
+        toastTexto.textContent = mensaje;
+        toast.classList.remove('opacity-0', 'translate-y-8');
+        toast.classList.add('opacity-100', 'translate-y-0');
+
+        clearTimeout(temporizadorToast);
+        temporizadorToast = setTimeout(function () {
+          toast.classList.remove('opacity-100', 'translate-y-0');
+          toast.classList.add('opacity-0', 'translate-y-8');
+        }, 4000);
+      }
+    });
+  </script>
+</body>
+</html>
